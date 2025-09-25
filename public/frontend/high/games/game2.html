@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Renewable Energy Tycoon</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f8ff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            color: #333;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 90%;
+            max-width: 800px;
+            margin: 20px;
+        }
+
+        h1 {
+            color: #228b22;
+            margin-bottom: 15px;
+            font-size: 1.8em;
+        }
+
+        .how-to-play {
+            margin-bottom: 20px;
+            text-align: left;
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 5px;
+        }
+
+        .how-to-play h2 {
+            color: #228b22;
+            font-size: 1.3em;
+            margin-bottom: 10px;
+        }
+
+        .how-to-play ul {
+            list-style-type: disc;
+            padding-left: 20px;
+            font-size: 0.9em;
+        }
+
+        .game-area {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 5px;
+            width: 60%;
+            aspect-ratio: 1/1;
+        }
+
+        .cell {
+            background-color: #e0e0e0;
+            cursor: pointer;
+            position: relative;
+            width: 100%;
+            padding-top: 100%;
+        }
+
+        .cell .icon {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.8em;
+        }
+
+        .cell.renewable .icon::before {
+            content: '☀️';
+            color: #ffd700;
+        }
+
+        .cell.non-renewable .icon::before {
+            content: '🏭';
+            color: #808080;
+        }
+
+        .cell.building .icon::before {
+            content: '🏠';
+            color: #4169e1;
+        }
+
+        .controls {
+            width: 35%;
+            padding-left: 20px;
+        }
+
+        button {
+            padding: 10px;
+            margin: 5px 0;
+            width: 100%;
+            background-color: #228b22;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #006400;
+        }
+
+        button.selected {
+            background-color: #145214;
+        }
+
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .meter {
+            margin: 10px 0;
+            font-size: 0.9em;
+        }
+
+        .bar {
+            height: 20px;
+            background-color: #ddd;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .fill {
+            height: 100%;
+            transition: width 0.5s;
+        }
+
+        #pollution-fill {
+            background-color: #ff4500;
+        }
+
+        #population-fill {
+            background-color: #228b22;
+        }
+
+        #message {
+            margin-top: 20px;
+            font-size: 1em;
+            color: #ff0000;
+        }
+
+        .timer {
+            font-size: 1em;
+            margin: 10px 0;
+            background-color: #90EE90;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        #end-screen {
+            display: none;
+            margin-top: 20px;
+        }
+
+        #end-screen h2 {
+            color: #228b22;
+            font-size: 1.5em;
+        }
+
+        #ending-message {
+            font-size: 1em;
+            margin-bottom: 15px;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+                width: 95%;
+            }
+
+            .game-area {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .grid {
+                width: 100%;
+                grid-template-columns: repeat(4, 1fr);
+            }
+
+            .controls {
+                width: 100%;
+                padding-left: 0;
+                margin-top: 15px;
+            }
+
+            .cell .icon {
+                font-size: 1.5em;
+            }
+
+            h1 {
+                font-size: 1.5em;
+            }
+
+            .how-to-play h2 {
+                font-size: 1.2em;
+            }
+
+            .how-to-play ul {
+                font-size: 0.85em;
+            }
+
+            .timer {
+                font-size: 0.9em;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+
+            .cell .icon {
+                font-size: 1.2em;
+            }
+
+            button {
+                padding: 8px;
+                font-size: 0.8em;
+            }
+
+            .meter, .timer {
+                font-size: 0.8em;
+            }
+
+            #message, #ending-message {
+                font-size: 0.9em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Renewable Energy Tycoon</h1>
+        <div class="how-to-play">
+            <h2>How to Play</h2>
+            <ul>
+                <li><strong>Objective:</strong> Build a city by placing energy sources and growing your population to 100 within 60 seconds while keeping pollution low.</li>
+                <li><strong>Energy Sources:</strong> Choose between renewable (cost: 50, low pollution) or non-renewable (cost: 30, high pollution) energy sources.</li>
+                <li><strong>Gameplay:</strong> Click a button to select an energy type, then click/tap a grid cell to place it. The game updates every second.</li>
+                <li><strong>Money:</strong> Earn money based on population growth. Spend it to build energy sources.</li>
+                <li><strong>Pollution:</strong> Non-renewables increase pollution. High pollution (>100) ends the game in failure.</li>
+                <li><strong>Endings:</strong> Reach 100 population with low pollution for a green utopia, moderate pollution for a balanced city, or fail by pollution or time (60 seconds).</li>
+            </ul>
+        </div>
+        <div class="game-area">
+            <div class="grid" id="grid"></div>
+            <div class="controls">
+                <button id="build-renewable">Build Renewable Energy (Cost: 50)</button>
+                <button id="build-non-renewable">Build Non-Renewable Energy (Cost: 30)</button>
+                <div class="meter">
+                    Money: <span id="money">100</span>
+                </div>
+                <div class="meter">
+                    Pollution:
+                    <div class="bar"><div class="fill" id="pollution-fill" style="width: 0%;"></div></div>
+                </div>
+                <div class="meter">
+                    Population:
+                    <div class="bar"><div class="fill" id="population-fill" style="width: 0%;"></div></div>
+                </div>
+                <div class="timer">
+                    Time Left: <span id="timer">00:60</span>
+                </div>
+                <div id="message"></div>
+            </div>
+        </div>
+        <div id="end-screen">
+            <h2>Game Over!</h2>
+            <div id="ending-message"></div>
+            <button id="restart">Play Again</button>
+        </div>
+    </div>
+
+    <script>
+        const GRID_SIZE = 5;
+        const MAX_POLLUTION = 100;
+        const GOAL_POPULATION = 100;
+        const GAME_DURATION = 60;
+        const grid = [];
+        let selectedType = null;
+        let money = 100;
+        let pollution = 0;
+        let population = 0;
+        let gameTime = GAME_DURATION;
+        let isGameOver = false;
+        let timerInterval;
+
+        const gridEl = document.getElementById('grid');
+        const moneyEl = document.getElementById('money');
+        const pollutionFill = document.getElementById('pollution-fill');
+        const populationFill = document.getElementById('population-fill');
+        const messageEl = document.getElementById('message');
+        const timerEl = document.getElementById('timer');
+        const endScreen = document.getElementById('end-screen');
+        const endingMessage = document.getElementById('ending-message');
+        const restartButton = document.getElementById('restart');
+        const renewableBtn = document.getElementById('build-renewable');
+        const nonRenewableBtn = document.getElementById('build-non-renewable');
+
+        function initGrid() {
+            gridEl.innerHTML = '';
+            grid.length = 0;
+            for (let i = 0; i < GRID_SIZE; i++) {
+                grid[i] = [];
+                for (let j = 0; j < GRID_SIZE; j++) {
+                    grid[i][j] = 'empty';
+                    const cell = document.createElement('div');
+                    cell.classList.add('cell');
+                    cell.dataset.row = i;
+                    cell.dataset.col = j;
+                    cell.setAttribute('aria-label', `Grid cell ${i},${j}, empty`);
+                    cell.innerHTML = '<div class="icon"></div>';
+                    cell.addEventListener('click', handleCellClick);
+                    cell.addEventListener('touchstart', handleCellClick, { passive: true });
+                    gridEl.appendChild(cell);
+                }
+            }
+        }
+
+        function handleCellClick(e) {
+            if (isGameOver) return;
+            const cell = e.target.closest('.cell');
+            if (!cell) return;
+            const row = parseInt(cell.dataset.row);
+            const col = parseInt(cell.dataset.col);
+            if (selectedType && grid[row][col] === 'empty') {
+                const cost = selectedType === 'renewable' ? 50 : 30;
+                if (money >= cost) {
+                    money -= cost;
+                    grid[row][col] = selectedType;
+                    cell.classList.add(selectedType);
+                    cell.setAttribute('aria-label', `Grid cell ${row},${col}, ${selectedType}`);
+                    updateMoney();
+                    messageEl.textContent = `Placed ${selectedType} energy source.`;
+                    selectedType = null;
+                    renewableBtn.classList.remove('selected');
+                    nonRenewableBtn.classList.remove('selected');
+                } else {
+                    messageEl.textContent = 'Not enough money!';
+                }
+            }
+        }
+
+        function countEnergy(type) {
+            let count = 0;
+            for (let i = 0; i < GRID_SIZE; i++) {
+                for (let j = 0; j < GRID_SIZE; j++) {
+                    if (grid[i][j] === type) count++;
+                }
+            }
+            return count;
+        }
+
+        function updateGame() {
+            if (isGameOver) return;
+            const renewables = countEnergy('renewable');
+            const nonRenewables = countEnergy('non-renewable');
+
+            // Growth: Non-renewables give faster growth
+            const growth = renewables * 5 + nonRenewables * 10;
+            population += growth / 10; // Slower growth per second
+            if (renewables > nonRenewables) {
+                population += 0.5; // Bonus for more renewables
+            }
+
+            // Pollution: Non-renewables increase pollution
+            pollution += nonRenewables * 1 - renewables * 0.2;
+            if (pollution < 0) pollution = 0;
+
+            // Earn money based on population
+            money += population / 100;
+
+            // Auto-build houses in empty cells if possible
+            for (let i = 0; i < GRID_SIZE; i++) {
+                for (let j = 0; j < GRID_SIZE; j++) {
+                    if (grid[i][j] === 'empty' && Math.random() < (growth / 1000)) {
+                        grid[i][j] = 'building';
+                        const cell = gridEl.querySelector(`[data-row="${i}"][data-col="${j}"]`);
+                        cell.classList.add('building');
+                        cell.setAttribute('aria-label', `Grid cell ${i},${j}, building`);
+                    }
+                }
+            }
+
+            updateUI();
+
+            // Check end conditions
+            if (pollution >= MAX_POLLUTION) {
+                endGame('polluted');
+            } else if (population >= GOAL_POPULATION) {
+                if (pollution < 30) {
+                    endGame('eco');
+                } else {
+                    endGame('balanced');
+                }
+            }
+        }
+
+        function updateTimer() {
+            if (isGameOver) return;
+            gameTime--;
+            const minutes = Math.floor(gameTime / 60);
+            const seconds = gameTime % 60;
+            timerEl.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            if (gameTime <= 0) {
+                endGame('timeout');
+            }
+        }
+
+        function updateUI() {
+            moneyEl.textContent = Math.floor(money);
+            pollutionFill.style.width = `${Math.min((pollution / MAX_POLLUTION) * 100, 100)}%`;
+            populationFill.style.width = `${Math.min((population / GOAL_POPULATION) * 100, 100)}%`;
+            messageEl.textContent = '';
+            renewableBtn.disabled = isGameOver;
+            nonRenewableBtn.disabled = isGameOver;
+        }
+
+        function updateMoney() {
+            moneyEl.textContent = Math.floor(money);
+        }
+
+        function endGame(type) {
+            isGameOver = true;
+            clearInterval(timerInterval);
+            let msg = '';
+            if (type === 'polluted') {
+                msg = `Polluted Wasteland: Your city is destroyed by pollution. Final Population: ${Math.floor(population)}, Score: ${Math.floor(money)}.`;
+            } else if (type === 'eco') {
+                msg = `Eco Paradise: Sustainable choices created a green utopia! Final Score: ${Math.floor(money)}.`;
+            } else if (type === 'balanced') {
+                msg = `Balanced City: You grew the city but with some environmental cost. Final Population: ${Math.floor(population)}, Score: ${Math.floor(money)}.`;
+            } else {
+                msg = `Time Out: City didn’t grow enough. Final Population: ${Math.floor(population)}, Score: ${Math.floor(money)}.`;
+            }
+            endingMessage.textContent = msg;
+            endScreen.style.display = 'block';
+            document.querySelector('.game-area').style.display = 'none';
+        }
+
+        renewableBtn.addEventListener('click', () => {
+            if (isGameOver) return;
+            selectedType = 'renewable';
+            messageEl.textContent = 'Select a grid cell to build renewable energy.';
+            renewableBtn.classList.add('selected');
+            nonRenewableBtn.classList.remove('selected');
+        });
+
+        nonRenewableBtn.addEventListener('click', () => {
+            if (isGameOver) return;
+            selectedType = 'non-renewable';
+            messageEl.textContent = 'Select a grid cell to build non-renewable energy.';
+            nonRenewableBtn.classList.add('selected');
+            renewableBtn.classList.remove('selected');
+        });
+
+        restartButton.addEventListener('click', () => {
+            if (confirm('Are you sure you want to restart the game?')) {
+                endScreen.style.display = 'none';
+                document.querySelector('.game-area').style.display = 'flex';
+                money = 100;
+                pollution = 0;
+                population = 0;
+                gameTime = GAME_DURATION;
+                isGameOver = false;
+                initGrid();
+                updateUI();
+                timerEl.textContent = `00:${GAME_DURATION.toString().padStart(2, '0')}`;
+                timerInterval = setInterval(() => {
+                    updateTimer();
+                    updateGame();
+                }, 1000);
+            }
+        });
+
+        initGrid();
+        updateUI();
+        timerInterval = setInterval(() => {
+            updateTimer();
+            updateGame();
+        }, 1000);
+    </script>
+</body>
+</html>
